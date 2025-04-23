@@ -38,6 +38,6 @@ public class CharacterScript : MonoBehaviour
             moveDirection = moveDirection.normalized;
         }
 
-        myRigidbody.MovePosition(myRigidbody.position + (moveDirection * velocity * Time.deltaTime));
+        myRigidbody.MovePosition(myRigidbody.position + (moveDirection * velocity));
     }
 }
