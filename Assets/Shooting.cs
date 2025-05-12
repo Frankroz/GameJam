@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 public class Shooting : MonoBehaviour
 {
@@ -8,9 +9,16 @@ public class Shooting : MonoBehaviour
     private Vector3 mousePos;
     public GameObject bullet;
     public Transform bulletTransform;
-    public bool canFire;
+    private bool canFire = true;
     private float timer;
     public float timeBetweenFiring;
+    public float reloadingTime = 3f;
+    private float bulletSpawnOffset = 0.5f;
+    public static int maxBullets = 12;
+    private int bulletCount = maxBullets;
+    public Text bulletCountText;
+    private bool isReloading = false;
+    private float reloadTimer;
 
     void Start()
     {
@@ -29,6 +37,19 @@ public class Shooting : MonoBehaviour
 
         transform.rotation = Quaternion.Euler(0, 0, lookAt);
 
+        if (isReloading)
+        {
+            reloadTimer += Time.deltaTime;
+            if (reloadTimer >= reloadingTime)
+            {
+                bulletCount = maxBullets;
+                isReloading = false;
+                UpdateBulletText();
+                canFire = true; // Allow firing after reload
+            }
+            return; // Don't process firing input while reloading
+        }
+
         if (!canFire)
         {
             timer += Time.deltaTime;
@@ -39,10 +60,53 @@ public class Shooting : MonoBehaviour
             }
         }
 
-        if (Input.GetMouseButton(0) && canFire)
+
+
+        if (Input.GetMouseButton(0) && canFire && bulletCount > 0)
         {
             canFire = false;
-            Instantiate(bullet, bulletTransform.position, Quaternion.identity);
+            bulletCount--;
+            UpdateBulletText();
+            Vector3 spawnPosition = bulletTransform.position + bulletTransform.up * bulletSpawnOffset;
+            Instantiate(bullet, spawnPosition, Quaternion.Euler(0, 0, transform.eulerAngles.z - 45f));
+
+            if (bulletCount <= 0)
+            {
+                StartReload();
+            }
+        }
+        else if (Input.GetMouseButton(0) && canFire && bulletCount <= 0 && !isReloading)
+        {
+            StartReload(); // Auto-reload if trying to fire with no bullets
+        }
+    }
+
+    void StartReload()
+    {
+        isReloading = true;
+        reloadTimer = 0f;
+        canFire = false;
+        UpdateBulletText();
+    }
+
+    void UpdateBulletText()
+    {
+        if (bulletCountText != null)
+        {
+            if (isReloading)
+            {
+                bulletCountText.fontSize = 80;
+                bulletCountText.text = "Reloading...";
+            }
+            else
+            {
+                bulletCountText.fontSize = 160;
+                bulletCountText.text = $"{bulletCount}/{maxBullets}";
+            }
+        }
+        else
+        {
+            Debug.LogWarning("Bullet Count Text UI element not assigned!");
         }
     }
 }

@@ -1,9 +1,13 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 public class CharacterScript : MonoBehaviour
 {
     public Rigidbody2D myRigidbody;
+    public Text scoreText;
     public float velocity;
+    public float health = 100f;
+    public int score = 0;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -39,5 +43,28 @@ public class CharacterScript : MonoBehaviour
         }
 
         myRigidbody.MovePosition(myRigidbody.position + (moveDirection * velocity));
+    }
+
+    public void TakeDamage(float amount)
+    {
+        health -= amount;
+        Debug.Log($"Player took {amount} damage. Current health: {health}");
+        if (health <= 0)
+        {
+            Die();
+        }
+    }
+
+    public void addScore(int plusScore)
+    {
+        score += plusScore;
+        scoreText.text = score.ToString();
+    }
+
+    private void Die()
+    {
+        Debug.Log("Player has died!");
+        // Implement player death logic here (e.g., game over screen)
+        Destroy(gameObject);
     }
 }

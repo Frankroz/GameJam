@@ -1,3 +1,5 @@
+using System;
+using Unity.Mathematics.Geometry;
 using UnityEngine;
 
 public class BulletScript : MonoBehaviour
@@ -24,4 +26,25 @@ public class BulletScript : MonoBehaviour
     {
         
     }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Wall"))
+        {
+            Destroy(gameObject);
+        }
+
+        if (collision.gameObject.CompareTag("Enemy"))
+        {
+            // Try to get the AIchase script from the collided GameObject
+            AIchase enemyAI = collision.gameObject.GetComponent<AIchase>();
+            if (enemyAI != null)
+            {
+                enemyAI.TakeDamage(25); // Example damage amount
+            }
+            Destroy(gameObject);
+        }
+    }
+
+
 }
