@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Wall
   - Enemy
+  - Pickups
   layers:
   - Default
   - TransparentFX
@@ -16,8 +17,8 @@ TagManager:
   - Player
   - Obstruction
   - Enemy
-  - 
-  - 
+  - Pickups
+  - Bullets
   - 
   - 
   - 

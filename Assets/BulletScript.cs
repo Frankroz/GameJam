@@ -8,6 +8,7 @@ public class BulletScript : MonoBehaviour
     private Camera mainCamera;
     private Rigidbody2D rb;
     public float force;
+    private Vector2 initialDirection;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -16,7 +17,14 @@ public class BulletScript : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         mousePos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
         Vector3 direction = (mousePos - transform.position).normalized;
-        rb.linearVelocity = new Vector2(direction.x, direction.y).normalized * force;
+        
+        if (initialDirection.y != 0f && initialDirection.x != 0f)
+        {
+            rb.linearVelocity = initialDirection * force;
+        } else
+        {
+            rb.linearVelocity = new Vector2(direction.x, direction.y).normalized * force * 3;
+        }
         float rot = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
         transform.rotation = Quaternion.AngleAxis(rot + 90, Vector3.forward);
     }
@@ -25,6 +33,11 @@ public class BulletScript : MonoBehaviour
     void Update()
     {
         
+    }
+
+    public void SetDirection(Vector3 direction)
+    {
+        initialDirection = direction;
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -36,15 +49,12 @@ public class BulletScript : MonoBehaviour
 
         if (collision.gameObject.CompareTag("Enemy"))
         {
-            // Try to get the AIchase script from the collided GameObject
             AIchase enemyAI = collision.gameObject.GetComponent<AIchase>();
             if (enemyAI != null)
             {
-                enemyAI.TakeDamage(25); // Example damage amount
+                enemyAI.TakeDamage(25);
             }
             Destroy(gameObject);
         }
     }
-
-
 }

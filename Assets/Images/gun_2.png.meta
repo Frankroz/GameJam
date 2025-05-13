@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: dd60893a5cda67c449d59266ca89d1ba
+guid: fed6f85e9dc8c89448d2599d1e57cac9
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 6104211469303930368
-    second: police_2_la_0
+      213: 6176124893312238688
+    second: gun_2_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -113,23 +113,23 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: police_2_la_0
+      name: gun_2_0
       rect:
         serializedVersion: 2
-        x: 48
-        y: 38
-        width: 33
-        height: 54
-      alignment: 9
-      pivot: {x: 0.42483023, y: 0.23968795}
+        x: 0
+        y: 0
+        width: 68
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 00ed9b56df386b450800000000000000
-      internalID: 6104211469303930368
+      spriteID: 064c2523ed006b550800000000000000
+      internalID: 6176124893312238688
       vertices: []
       indices: 
       edges: []
@@ -138,7 +138,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 090975dfcdce7fb4a9ce04ba31e2b7d4
+    spriteID: 
     internalID: 0
     vertices: []
     indices: 
@@ -147,8 +147,7 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable:
-      police_2_la_0: 6104211469303930368
+    nameFileIdTable: {}
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

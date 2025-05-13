@@ -21,7 +21,7 @@ public class HealthToScrollbar : MonoBehaviour
         }
 
         // Get the player's maximum health from the CharacterScript
-        maxHealth = playerCharacter.health;
+        maxHealth = playerCharacter.maxHealth;
 
         // Initialize the scrollbar size based on the initial health
         UpdateScrollbarSize();
