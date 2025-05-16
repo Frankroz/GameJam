@@ -7,6 +7,10 @@ TagManager:
   - Wall
   - Enemy
   - Pickups
+  - EnemySpawns
+  - Audio
+  - LogicScript
+  - AudioManager
   layers:
   - Default
   - TransparentFX

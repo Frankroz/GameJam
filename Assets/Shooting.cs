@@ -6,6 +6,7 @@ public class Shooting : MonoBehaviour
 {
     private Camera mainCamera;
     public GunData currentGun;
+    public GunData defaultGun;
     public GameObject bulletCase;
     public GameObject[] gunFires;
     public GameObject bulletPrefab;
@@ -18,11 +19,14 @@ public class Shooting : MonoBehaviour
     public int maxBullets; // Set by currentGun
     public int bulletCount;
     public Text bulletCountText;
-    private bool isReloading = false;
-    private float reloadTimer;
+    public bool isReloading = false;
+    public float reloadTimer;
     private int shotgunPelletCount = 5;
     private float shotgunSpreadAngle = 45f;
     private float gunfireDuration = 0.1f;
+
+    public PlayerAudioManager audioManager;
+    public LogicScript logicScript;
 
     void Start()
     {
@@ -34,14 +38,20 @@ public class Shooting : MonoBehaviour
             bulletCount = currentGun.ammoCapacity;
             UpdateBulletText();
         }
+        else if (defaultGun != null)
+        {
+            EquipGun(defaultGun); // Equip the default gun at start if no other gun is set
+        }
         else
         {
-            Debug.LogWarning("No initial gun assigned to the Shooting script!");
+            Debug.LogWarning("No initial or default gun assigned to the Shooting script!");
         }
     }
 
     void Update()
     {
+        if(logicScript.isGamePaused) { return; }
+
         Vector3 mousePos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
         mousePos.z = 0;
 
@@ -88,12 +98,11 @@ public class Shooting : MonoBehaviour
             }
             else
             {
+                if (currentGun.gunName == "Rifle")
+                    audioManager.PlaySFX(audioManager.rifleGunshot);
+                else
+                    audioManager.PlaySFX(audioManager.pistolGunshot);
                 Instantiate(bulletPrefab, spawnPosition, baseRotation);
-            }
-
-            if (bulletCount <= 0)
-            {
-                StartReload();
             }
 
             if (bulletCount <= 0)
@@ -105,7 +114,6 @@ public class Shooting : MonoBehaviour
             int rand = Random.Range(0, gunFires.Length);
             GameObject gunfireInstance = Instantiate(gunFires[rand], spawnPosition, Quaternion.Euler(0, 0, transform.eulerAngles.z + 45f));
             StartCoroutine(DisableAfterDelay(gunfireInstance, gunfireDuration));
-
         }
         else if (Input.GetMouseButton(0) && canFire && bulletCount <= 0 && !isReloading)
         {
@@ -118,6 +126,7 @@ public class Shooting : MonoBehaviour
         float halfSpread = shotgunSpreadAngle / 2f;
         for (int i = 0; i < shotgunPelletCount; i++)
         {
+            audioManager.PlaySFX(audioManager.shotgunGunshot);
             float spread = Random.Range(-halfSpread, halfSpread);
             Quaternion spreadRotation = Quaternion.Euler(0, 0, spread);
             Quaternion finalRotation = baseRotation * spreadRotation;
@@ -146,6 +155,42 @@ public class Shooting : MonoBehaviour
         isReloading = true;
         reloadTimer = 0f;
         canFire = false;
+        UpdateBulletText();
+
+        if (currentGun.gunName == "Shotgun")
+            audioManager.PlaySFX(audioManager.shotgunReload);
+        if (currentGun.gunName == "Rifle")
+            audioManager.PlaySFX(audioManager.rifleReload);
+        else
+            audioManager.PlaySFX(audioManager.pistolReload);
+
+        // Check if the current gun is different from the default gun
+        if (currentGun != defaultGun && isReloading == true)
+        {
+            // Start a coroutine to switch to the default gun after reloading
+            StartCoroutine(SwitchToDefaultGunAfterReload());
+        }
+    }
+
+    IEnumerator SwitchToDefaultGunAfterReload()
+    {
+        // Wait for the reload to finish
+        yield return new WaitUntil(() => !isReloading);
+
+        // Equip the default gun
+        EquipGun(defaultGun);
+    }
+
+    public void EquipGun(GunData newGunData)
+    {
+        // Interrupt reloading if a new gun is picked up
+        isReloading = false;
+        reloadTimer = 0f;
+        canFire = true; // Player can fire immediately with the new gun
+        currentGun = newGunData;
+        timeBetweenFiring = currentGun.fireRate;
+        maxBullets = currentGun.ammoCapacity;
+        bulletCount = currentGun.ammoCapacity;
         UpdateBulletText();
     }
 

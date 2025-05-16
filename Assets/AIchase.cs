@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI; // Important for UI elements
 
 public class AIchase : MonoBehaviour
@@ -15,16 +16,30 @@ public class AIchase : MonoBehaviour
     [Range(0f, 1f)] public float dropChance = 0.5f; // Chance (0 to 1) to drop an item
     public GameObject healthPickupPrefab;
     public GameObject[] gunPickupPrefab;
+    private Vector3 lastPosition;
 
     private Scrollbar healthBar;
 
     private float distance;
+    public ZombieAudioManager zombieAudioManager;
+    public WardenAudioManager wardenAudioManager;
+    public float walkingSoundDuration;
+    private float walkingSoundTimer = 0f;
+    private bool isWalkingSoundPlaying = false;
+
+    public LogicScript logicScript;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         player = GameObject.FindGameObjectWithTag("Player");
-        playerScript = GameObject.FindGameObjectWithTag("Player").GetComponent<CharacterScript>();
+        zombieAudioManager = GetComponentInChildren<ZombieAudioManager>();
+        wardenAudioManager = GetComponentInChildren<WardenAudioManager>();
+        logicScript = GameObject.FindGameObjectWithTag("LogicScript").GetComponent<LogicScript>();
+
+
+        if (player != null)
+            playerScript = GameObject.FindGameObjectWithTag("Player").GetComponent<CharacterScript>();
         lastDamageTime = -damagePerSecond;
 
         // Find the health bar Scrollbar component in the children
@@ -52,6 +67,10 @@ public class AIchase : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (logicScript.isGamePaused)
+        {
+            return;
+        }
         UpdateHealthBar();
         if (health <= 0)
         {
@@ -65,14 +84,59 @@ public class AIchase : MonoBehaviour
             return;
         }
 
-        distance = Vector2.Distance(transform.position, player.transform.position);
-        Vector2 direction = player.transform.position - transform.position;
-        direction.Normalize();
 
-        float angle = (Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg) - 90f;
+        if (playerScript != null)
+        {
+            lastPosition = player.transform.position;
+            distance = Vector2.Distance(transform.position, player.transform.position);
+            Vector2 direction = player.transform.position - transform.position;
+            direction.Normalize();
 
-        transform.position = Vector2.MoveTowards(this.transform.position, player.transform.position, speed * Time.deltaTime);
-        transform.rotation = Quaternion.Euler(Vector3.forward * angle);
+            float angle = (Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg) - 90f;
+
+            transform.position = Vector2.MoveTowards(this.transform.position, player.transform.position, speed * Time.deltaTime);
+            transform.rotation = Quaternion.Euler(Vector3.forward * angle);
+
+            bool isMoving = direction.magnitude > 0.1f;
+
+            if (isMoving)
+            {
+                direction = direction.normalized;
+                if (!isWalkingSoundPlaying)
+                {
+
+                    if (gameObject.name == "Zombie(Clone)")
+                        { zombieAudioManager.PlayWalking(); }
+                    else
+                        { wardenAudioManager.PlayWalking(); }
+                    
+                    isWalkingSoundPlaying = true;
+                    walkingSoundTimer = 0f;
+                }
+                else
+                {
+                    walkingSoundTimer += Time.deltaTime;
+                    if (walkingSoundTimer >= walkingSoundDuration)
+                    {
+                        walkingSoundTimer = 0f;
+                        if (gameObject.name == "Zombie(Clone)")
+                            zombieAudioManager.PlayWalking();
+                        else
+                            wardenAudioManager.PlayWalking();
+                    }
+                }
+            }
+        } else
+        {
+            distance = Vector2.Distance(transform.position, lastPosition);
+            Vector2 direction = lastPosition - transform.position;
+            direction.Normalize();
+
+            float angle = (Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg) - 90f;
+
+            transform.position = Vector2.MoveTowards(this.transform.position, lastPosition, speed * Time.deltaTime);
+            transform.rotation = Quaternion.Euler(Vector3.forward * angle);
+        }
     }
 
     public void TakeDamage(float amount)
@@ -101,6 +165,10 @@ public class AIchase : MonoBehaviour
             }
         }
 
+        if (gameObject.name == "Zombie(Clone)")
+            { zombieAudioManager.PlayDamage(); }
+        else
+            { wardenAudioManager.PlayDamage(); }
         Destroy(gameObject);
         Instantiate(blood, new Vector3(transform.position.x, transform.position.y, 5), Quaternion.identity);
     }

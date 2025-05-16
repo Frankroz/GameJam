@@ -12,6 +12,8 @@ public class FieldOfView : MonoBehaviour
     public bool CanSeeEnemy { get; private set; }
 
     private float playerBaseAngle = 135f;
+    private HashSet<Transform> roaredAtWarden = new HashSet<Transform>();
+
     // Update is called once per frame (no need for a Coroutine for this check frequency)
     void Update()
     {
@@ -39,11 +41,22 @@ public class FieldOfView : MonoBehaviour
                 if (!Physics2D.Raycast(transform.position, directionToTarget, distanceToTarget, obstructionLayer))
                 {
                     visibleTargets.Add(target);
+                    if (target.name == "Warden" && !roaredAtWarden.Contains(target)) // Check if Warden hasn't roared yet
+                    {
+                        WardenAudioManager wardenAudio = target.GetComponentInChildren<WardenAudioManager>();
+                        if (wardenAudio != null)
+                        {
+                            wardenAudio.PlayRoar();
+                            roaredAtWarden.Add(target); // Mark this Warden as roared at
+                        }
+                    }
                 }
             }
         }
     }
 
+    /*
+     * Check area of FOV
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.white;
@@ -64,6 +77,8 @@ public class FieldOfView : MonoBehaviour
             Gizmos.DrawLine(transform.position, target.position);
         }
     }
+    
+    */
 
     private Vector3 DirectionFromAngle(float angleInDegrees)
     {

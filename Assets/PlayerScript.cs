@@ -20,15 +20,23 @@ public class CharacterScript : MonoBehaviour
     public bool isInvisible = false;
     public float invisibilityCooldown = 3f; // Cooldown after invisibility ends
     private float invisibilityCooldownTimer = 0f;
-    private SpriteRenderer spriteRenderer;
+    public SpriteRenderer spriteRenderer;
     private Color originalColor;
 
     public Shooting shootingScript;
+
+    public PlayerAudioManager audioManager;
+    private float walkingSoundDuration = 0.43f;
+    private float walkingSoundTimer = 0f;
+    private bool isWalkingSoundPlaying = false;
+
+    public LogicScript logicScript;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
+        audioManager = GetComponentInChildren<PlayerAudioManager>();
         if (spriteRenderer != null)
         {
             originalColor = spriteRenderer.color;
@@ -40,6 +48,7 @@ public class CharacterScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (logicScript.isGamePaused) { return; }
         Vector2 moveDirection = Vector2.zero;
 
         if (Input.GetKey(KeyCode.W))
@@ -59,9 +68,30 @@ public class CharacterScript : MonoBehaviour
             moveDirection += Vector2.right;
         }
 
-        if (moveDirection.magnitude > 1f)
+        bool isMoving = moveDirection.magnitude > 0.1f;
+
+        if (isMoving)
         {
             moveDirection = moveDirection.normalized;
+            if (!isWalkingSoundPlaying)
+            {
+                audioManager.PlayWalking();
+                isWalkingSoundPlaying = true;
+                walkingSoundTimer = 0f;
+            }
+            else
+            {
+                walkingSoundTimer += Time.deltaTime;
+                if (walkingSoundTimer >= walkingSoundDuration)
+                {
+                    walkingSoundTimer = 0f;
+                    audioManager.PlayWalking();
+                }
+            }
+        }
+        else
+        {
+            isWalkingSoundPlaying = false;
         }
 
         myRigidbody.MovePosition(myRigidbody.position + (moveDirection * velocity));
@@ -87,6 +117,7 @@ public class CharacterScript : MonoBehaviour
     public void TakeDamage(float amount)
     {
         health -= amount;
+        audioManager.PlayDamage();
         if (health <= 0)
         {
             Die();
@@ -181,19 +212,19 @@ public class CharacterScript : MonoBehaviour
     {
         if (shootingScript != null && newGunData != null)
         {
-            shootingScript.currentGun = newGunData;
-            shootingScript.timeBetweenFiring = newGunData.fireRate;
-            shootingScript.maxBullets = newGunData.ammoCapacity;
-            shootingScript.bulletCount = newGunData.ammoCapacity;
-            shootingScript.UpdateBulletText();
+            shootingScript.EquipGun(newGunData);
         }
     }
 
     private void Die()
     {
-        Debug.Log("Player has died!");
+        audioManager.PlaySFX(audioManager.deadSound);
         // Implement player death logic here (e.g., game over screen)
+        GameObject[] enemySpawns = GameObject.FindGameObjectsWithTag("EnemySpawns");
+        foreach (GameObject enemySpawn in enemySpawns)
+            Destroy(enemySpawn);
         Instantiate(blood, new Vector3(transform.position.x, transform.position.y, 5), Quaternion.identity);
+        logicScript.gameOver();
         Destroy(gameObject);
     }
 }

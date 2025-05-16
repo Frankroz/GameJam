@@ -3,7 +3,7 @@ using UnityEngine;
 public class ChangeGunSprite : MonoBehaviour
 {
     private SpriteRenderer[] gunRenderers;
-    public Shooting shootingScript;
+    private Shooting shootingScript;
     private GunData currentGun;
 
     void Start()
@@ -41,7 +41,6 @@ public class ChangeGunSprite : MonoBehaviour
             // Assuming the name of the child GameObject matches the gunName in GunData
             if (renderer.gameObject.name == currentGun.gunName)
             {
-                Debug.Log($"{renderer.gameObject.name} -- {currentGun.gunName}");
                 renderer.enabled = true;
                 foundMatchingGun = true;
             }
